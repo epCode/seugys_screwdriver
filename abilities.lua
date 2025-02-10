@@ -230,7 +230,7 @@ end, "press", "seugys_screwdriver_screwdriver_incinerate.png", "Incinerate")
 
 
 seugyssd.register_use("display_info", function(player, itemstack)
-  local ray = seugyssd.get_pointed_surface(player, 30, true, false)
+  local ray = seugyssd.get_pointed_surface(player, 30, false, false)
   if not ray then return end
 
   local obj = ray.ref
