@@ -1,9 +1,10 @@
 seugyssd.uses = {}
+seugyssd.current_hud = {}
 
-function seugyssd.register_use(name, func, actype, texture)
+function seugyssd.register_use(name, func, actype, texture, description)
   if not texture then texture = "seugys_screwdriver_screwdriver.png" end
 
-  seugyssd.uses[name] = {texture = texture, func = func, activation_type = actype}
+  seugyssd.uses[name] = {description = description, texture = texture, func = func, activation_type = actype}
 end
 
 function seugyssd.get_pointed_surface(player, reach, objects, liquids)
@@ -24,7 +25,13 @@ local function get_use(stack)
   return use
 end
 
-local function set_use(stack, use)
+local function set_use(player, stack, use)
+  seugyssd.hud_text(player, "switch_screwdriver_uses", {
+    text = seugyssd.uses[use].description,
+    position = {x=0.5, y=1},
+    offset = {x=0, y=-110},
+    expiretime = 1,
+  })
   local meta = stack:get_meta()
   meta:set_string("use", use)
   meta:set_string("inventory_image", seugyssd.uses[use].texture)
@@ -44,18 +51,17 @@ core.register_tool("seugys_screwdriver:screwdriver", {
 
     for use,def in pairs(seugyssd.uses) do
       if cycle then
-        set_use(itemstack, use)
+        set_use(user, itemstack, use)
         return itemstack
       end
       if use == cuse then cycle = true end
     end
     if cycle then
       for use,def in pairs(seugyssd.uses) do
-        set_use(itemstack, use)
+        set_use(user, itemstack, use)
         return itemstack
       end
     end
-
   end,
 })
 
@@ -150,3 +156,41 @@ function seugyssd.add_particle(type, target, def)
     maxsize = def.maxsize or 3,
   })
 end
+
+function seugyssd.hud_text(player, name, def)
+  local hudd = {
+    type = "text",
+    position = {x=0.5,y=0.5},
+    scale = {x = 1, y = 1},
+    text = "Change this",
+    number = 0xffffff,
+    time_visible = 1,
+  }
+  for key,value in pairs(def) do
+    hudd[key] = value
+  end
+  local time_visible = def.time_visible or hudd.time_visible
+  local chud = seugyssd.current_hud[player:get_player_name()] or {}
+  seugyssd.current_hud[player:get_player_name()] = chud or {}
+  if not chud[name] then
+    chud[name] = {}
+    seugyssd.current_hud[player:get_player_name()][name] = {}
+  end
+  if chud[name].id then player:hud_remove(chud[name].id) end
+  seugyssd.current_hud[player:get_player_name()][name].id = player:hud_add(hudd)
+  seugyssd.current_hud[player:get_player_name()][name].expiretime = time_visible
+end
+
+core.register_globalstep(function(dtime)
+  for name,huds in pairs(seugyssd.current_hud) do
+    local player = minetest.get_player_by_name(name)
+    for nameid,hud in pairs(huds) do
+      if hud.expiretime <= 0 and player then
+        player:hud_remove(hud.id)
+        huds[nameid] = nil
+      else
+        hud.expiretime = hud.expiretime - dtime
+      end
+    end
+  end
+end)

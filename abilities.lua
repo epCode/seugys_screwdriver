@@ -29,7 +29,7 @@ seugyssd.register_use("move", function(player, itemstack)
 
   --elseif ray.type == "node" then
   end
-end, "hold")
+end, "hold", nil, "Move")
 
 controls.register_on_release(function(player, key)
   if key ~= "LMB" then return end
@@ -60,7 +60,7 @@ seugyssd.register_use("seperate", function(player, itemstack)
     end
   end
 
-end, "press", "seugys_screwdriver_screwdriver_seperate.png")
+end, "press", "seugys_screwdriver_screwdriver_seperate.png", "Detach")
 
 seugyssd.register_use("spin", function(player, itemstack)
   local ray = seugyssd.get_pointed_surface(player, 30, true, false)
@@ -95,7 +95,7 @@ seugyssd.register_use("spin", function(player, itemstack)
     maxexptime = 1,
   })
 
-end, "hold", "seugys_screwdriver_screwdriver_spin.png")
+end, "hold", "seugys_screwdriver_screwdriver_spin.png", "Spin")
 
 function search_value(tbl, val)
     for i = 1, #tbl do
@@ -120,6 +120,8 @@ seugyssd.register_use("abm_speed", function(player, itemstack)
 
   if not node then return end
 
+
+
   seugyssd.add_particle("node", ray.under, {
     time = 0.2,
     amount = 60,
@@ -142,7 +144,7 @@ seugyssd.register_use("abm_speed", function(player, itemstack)
   end
 
 
-end, "press", "seugys_screwdriver_screwdriver_abm.png")
+end, "press", "seugys_screwdriver_screwdriver_abm.png", "ABM Speed-up")
 
 core.register_entity("seugys_screwdriver:entity", {
   physical = true,
@@ -192,7 +194,7 @@ seugyssd.register_use("copy_paste", function(player, itemstack)
   end
 
 
-end, "press", "seugys_screwdriver_screwdriver_copypaste.png")
+end, "press", "seugys_screwdriver_screwdriver_copypaste.png", "Entity Clone")
 
 
 seugyssd.register_use("incinerate", function(player, itemstack)
@@ -224,35 +226,39 @@ seugyssd.register_use("incinerate", function(player, itemstack)
     end
   end
 
-end, "press", "seugys_screwdriver_screwdriver_incinerate.png")
+end, "press", "seugys_screwdriver_screwdriver_incinerate.png", "Incinerate")
 
---[[
+
 seugyssd.register_use("display_info", function(player, itemstack)
   local ray = seugyssd.get_pointed_surface(player, 30, true, false)
   if not ray then return end
 
   local obj = ray.ref
 
-  local finalstring = ""
+  local finalstring = {"_________________________________________"}
 
   if ray.type == "node" then
     local meta = core.get_meta(ray.under)
 
 
-    finalstring = finalstring .. "name: " .. minetest.get_node(ray.under).name
-    finalstring = finalstring .. "description: " .. minetest.registered_nodes[minetest.get_node(ray.under).name].description
+    table.insert(finalstring, "name: " .. minetest.get_node(ray.under).name)
+    table.insert(finalstring, "description: " .. minetest.registered_nodes[minetest.get_node(ray.under).name].description)
 
 
     local metakeys = meta:get_keys()
 
     for _,key in pairs(metakeys) do
-      finalstring = finalstring .. tostring(key)..": "..meta:get_string(key).."\n"
+      table.insert(finalstring, tostring(key)..": "..meta:get_string(key))
     end
-
   end
 
+  seugyssd.hud_text(player, "display_info", {
+    text = table.concat(finalstring, "\n"),
+    alignment = {x=1, y=1},
+    position = {x=0, y=0},
+    offset = {x=10, y=170},
+    time_visible = 0.1,
+  })
 
-  print(finalstring)
 
-end, "hold", "seugys_screwdriver_screwdriver_ss.png")
-]]
+end, "hold", "seugys_screwdriver_screwdriver_info.png", "Display Info")
